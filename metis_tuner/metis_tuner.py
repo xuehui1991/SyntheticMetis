@@ -199,7 +199,7 @@ class MetisTuner():
             output[self.key_order[i]] = param
         return output
 
-    def generate_parameters(self, topK=1, fixed_param=None):
+    def generate_parameters(self, topK=1, fixed_params=None):
         """Generate next parameter for trial
         If the number of trial result is lower than cold start number,
         metis will first random generate some parameters.
@@ -218,11 +218,18 @@ class MetisTuner():
         x_bounds = copy.deepcopy(self.x_bounds)
         x_types = copy.deepcopy(self.x_types)
         #  fixed parameter or not
-        if fixed_param is not None:
-            fixed_name, fixed_value = fixed_param
-            idx = self.key_order.index(fixed_name)
-            x_bounds[idx] = [fixed_value]
-            x_types[idx] = "discrete_int"
+        # if fixed_param is not None:
+        #     fixed_name, fixed_value = fixed_param
+        #     idx = self.key_order.index(fixed_name)
+        #     x_bounds[idx] = [fixed_value]
+        #     # x_types[idx] = "discrete_int"
+
+        if fixed_params is not None:
+            for fixed_param in fixed_params:
+                fixed_name, fixed_value = fixed_param
+                idx = self.key_order.index(fixed_name)
+                x_bounds[idx] = [fixed_value]
+                # x_types[idx] = "discrete_int"
 
         # cold start
         if len(self.samples_x) < self.cold_start_num:
