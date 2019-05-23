@@ -1,0 +1,8 @@
+{
+    "x":{"_type":"quniform","_value":[0, 4, 0.1]},
+    "y":{"_type":"quniform","_value":[0, 3, 0.1]},
+    "z":{"_type":"quniform","_value":[0, 2, 0.1]},
+    "platform":{"_type":"choice","_value":[0, 1]},
+    "network":{"_type":"choice","_value":[0, 1]},
+    "country":{"_type":"choice","_value":[0, 1]}
+}
