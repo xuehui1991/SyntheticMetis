@@ -36,8 +36,13 @@ def load_csv(csv_path):
 
 def get_euclidean_distance(param, row):
     result = 0
-    for key in param:
-        result = result + math.pow((param[key] - row[key]), 2)
+    for key in ['x', 'y', 'z']:
+        try:
+            result = result + math.pow((param[key] - row[key]), 2)
+        except:
+            LOG.debug(param[key])
+            LOG.debug(row[key])
+            raise
     return math.sqrt(result)
 
 
@@ -58,8 +63,8 @@ def get_similar_point(df, param):
     if min_row is None:
         raise RuntimeError("min_row cannot be None.")
     
-    print("min_row")
-    print(min_row)
+    # print("min_row")
+    # print(min_row)
     return min_row['reward_rescale']
 
 
@@ -104,60 +109,62 @@ def run(args, tuner: str = 'Metis', max_trial_num : int = 1000, step_size : int 
 
     trial_num = 0
     for trial_num in range(1,max_trial_num+1):
-        print("trial_num:",trial_num)
+        LOG.info("trial_num:" + str(trial_num))
 
         if trial_num % 50 != 0:        
             # ask tuner a parameter
             params_dict = tuner.generate_parameters(topK=1)
             best_params, next_params_topK = params_dict["best_config"], params_dict["next_config_topK"]
 
-            print("best_params:")
-            print(best_params)
-            print("next_params_topk:")
-            print(next_params_topK)
+            LOG.info("best_params:")
+            LOG.info(best_params)
+            LOG.info("next_params_topk:")
+            LOG.info("### next: " + str(next_params_topK[0]))
 
             RECEIVED_PARAMS = next_params_topK[0]
 
             cost = get_similar_point(df, next_params_topK[0])
-            print(" Take the next_params and get result:")
-            print(cost)
+            LOG.info("Take the next_params and get result:")
+            LOG.info("### cost: " + str(cost))
 
             tuner.receive_trial_result(RECEIVED_PARAMS, cost)
         else:
-            # contexts = {'platform': ['Mac', 'Windows'], 
-            #             'network': ['wifi', 'wired'], 
-            #             'country': ['US', 'CA']}
-            unique_contexts = [{'platform':'Mac', 'network':'wifi', 'country':'US'}, 
-                               {'platform':'Windows', 'network':'wifi', 'country':'US'},
-                               {'platform':'Mac', 'network':'wired', 'country':'US'},
-                               {'platform':'Windows', 'network':'wired', 'country':'US'},
-                               {'platform':'Mac', 'network':'wifi', 'country':'CA'}, 
-                               {'platform':'Windows', 'network':'wifi', 'country':'CA'},
-                               {'platform':'Mac', 'network':'wired', 'country':'CA'},
-                               {'platform':'Windows', 'network':'wired', 'country':'CA'},]
+            # contexts = {'platform': ['Mac'-0, 'Windows'-1], 
+            #             'network': ['wifi'-0, 'wired'-1], 
+            #             'country': ['US'-0, 'CA'-1]}
+            unique_contexts = [{'platform':0, 'network':0, 'country':0}, 
+                               {'platform':1, 'network':0, 'country':0},
+                               {'platform':0, 'network':1, 'country':0},
+                               {'platform':1, 'network':1, 'country':0},
+                               {'platform':0, 'network':0, 'country':1}, 
+                               {'platform':1, 'network':0, 'country':1},
+                               {'platform':0, 'network':1, 'country':1},
+                               {'platform':1, 'network':1, 'country':1},]
 
             for context in unique_contexts:
-                print("context:")
-                print(context)
+                LOG.info("context:")
+                LOG.info(context)
 
                 fix_param = []
                 for key in context:
                     fix_param.append((key, context[key]))
 
-                params_dict = tuner.generate_parameters(topK=1, fixed_param = fix_param)
+                params_dict = tuner.generate_parameters(topK=1, fixed_params= fix_param)
                 best_params, next_params_topK = params_dict["best_config"], params_dict["next_config_topK"]
                 
-                print("best_params:")
-                print(best_params)
-                print("next_params_topk:")
-                print(next_params_topK)
+                LOG.info("best_params:")
+                LOG.info("### best: " + str(best_params))
+                LOG.info("next_params_topk:")
+                LOG.info(next_params_topK)
                 RECEIVED_PARAMS = best_params
 
                 cost = get_similar_point(df, RECEIVED_PARAMS)
-                print("Take the best params and get result:")
-                print(cost)
+                LOG.info("Take the best params and get result:")
+                LOG.info("### cost: " + str(cost))
 
                 tuner.receive_trial_result(RECEIVED_PARAMS, cost)
+            
+    LOG.info("Train Done.")
 
 
 def test():
